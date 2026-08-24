@@ -71,7 +71,7 @@ tr.return td { color:#e74c3c; background:#fff5f5; }
 <body>
 <div class="loading" id="loading">正在生成销售数据（2026年6月实收1,203,386元 · 7月实收1,276,478元 · 其他月份随机±15%），请稍候...</div>
 <div class="top-header">
-  <div class="logo"><div class="logo-icon">XZ</div>销售管理系统</div>
+  <div class="logo"><div class="logo-icon">HK</div>长沙市汇控erp销售管理系统</div>
   <div class="company-name">竹溪县鑫竹电器有限公司</div>
 </div>
 <div class="main-wrapper">
@@ -149,7 +149,7 @@ function randChance(prob) { return rand() < prob; }
 function randItem(arr) { return arr[Math.floor(rand() * arr.length)]; }
 function shuffleArray(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-const INIT_STOCK_QTY = 80, PAGE_SIZE = 20;
+const INIT_STOCK_QTY = 80, PAGE_SIZE = 10;
 // 核心参数：退货率8%
 const TARGET_RETURN_RATE = 0.08;
 // 2026年基准净销售额
