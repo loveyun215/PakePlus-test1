@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>竹溪县鑫竹电器有限公司 - 销售管理系统</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:"Microsoft YaHei","PingFang SC",sans-serif; }
+body { background:#f7f8fa; font-size:14px; color:#2c3e50; min-height:100vh; }
+.top-header { height:60px; background:linear-gradient(90deg,#2c3e50,#34495e); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 30px; box-shadow:0 2px 10px rgba(0,0,0,0.1); position:fixed; top:0; left:0; right:0; z-index:999; }
+.top-header .logo { display:flex; align-items:center; gap:12px; font-size:18px; font-weight:bold; }
+.top-header .logo-icon { width:36px; height:36px; background:#3498db; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; }
+.top-header .company-name { font-size:16px; font-weight:500; color:#ecf0f1; }
+.main-wrapper { display:flex; margin-top:60px; min-height:calc(100vh - 60px); }
+.sidebar { width:220px; background:#fff; box-shadow:2px 0 8px rgba(0,0,0,0.05); padding:20px 0; display:flex; flex-direction:column; gap:4px; }
+.sidebar-item { padding:14px 25px; cursor:pointer; display:flex; align-items:center; gap:10px; font-size:14px; color:#555; transition:all 0.2s; border-left:3px solid transparent; user-select:none; }
+.sidebar-item:hover { background:#f0f7ff; color:#3498db; }
+.sidebar-item.active { background:#f0f7ff; color:#3498db; border-left:3px solid #3498db; font-weight:500; }
+.content { flex:1; padding:25px 30px; overflow:auto; }
+.page-section { display:none; }
+.page-section.active { display:block; }
+.page-title { font-size:20px; font-weight:600; color:#2c3e50; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+.page-title::before { content:""; width:4px; height:20px; background:#3498db; border-radius:2px; }
+.filter-card { background:#fff; border-radius:12px; padding:20px 25px; box-shadow:0 2px 12px rgba(0,0,0,0.05); margin-bottom:20px; display:flex; flex-wrap:wrap; gap:18px; align-items:center; }
+.filter-item { display:flex; align-items:center; gap:8px; }
+.filter-item span { color:#666; white-space:nowrap; }
+.filter-item input, .filter-item select { padding:8px 12px; border:1px solid #e1e5e9; border-radius:6px; outline:none; width:180px; font-size:14px; transition:border 0.2s; }
+.filter-item input:focus, .filter-item select:focus { border-color:#3498db; }
+.btn { padding:8px 18px; border-radius:6px; border:none; cursor:pointer; font-size:14px; transition:all 0.2s; display:inline-flex; align-items:center; justify-content:center; gap:5px; }
+.btn-primary { background:#3498db; color:#fff; }
+.btn-primary:hover { background:#2980b9; }
+.btn-default { background:#95a5a6; color:#fff; }
+.btn-default:hover { background:#7f8c8d; }
+.btn-outline { background:transparent; border:1px solid #3498db; color:#3498db; }
+.btn-outline:hover { background:#f0f7ff; }
+.card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; margin-bottom:25px; }
+.stat-card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,0.05); display:flex; align-items:center; gap:15px; }
+.stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; }
+.stat-icon.blue { background:#3498db; }
+.stat-icon.green { background:#27ae60; }
+.stat-icon.orange { background:#f39c12; }
+.stat-icon.red { background:#e74c3c; }
+.stat-info h3 { font-size:22px; font-weight:600; color:#2c3e50; }
+.stat-info small { color:#888; font-size:13px; }
+.table-card { background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.05); overflow-x:auto; margin-bottom:20px; }
+table { width:100%; border-collapse:collapse; }
+th { background:#f8f9fa; padding:14px 12px; text-align:left; font-weight:600; color:#444; border-bottom:1px solid #eaecef; white-space:nowrap; }
+td { padding:12px; border-bottom:1px solid #f1f1f1; color:#333; }
+tr:hover { background:#fafbfc; }
+tr.return td { color:#e74c3c; background:#fff5f5; }
+.empty-row td { text-align:center; color:#999; padding:40px 0; }
+.page-bar { background:#fff; border-radius:12px; padding:15px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.05); display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+.page-info { display:flex; gap:25px; color:#555; flex-wrap:wrap; }
+.page-info span { white-space:nowrap; }
+.num { font-weight:600; margin-left:4px; }
+.num-blue { color:#3498db; }
+.num-red { color:#e74c3c; }
+.num-orange { color:#f39c12; }
+.num-green { color:#27ae60; }
+.page-pagination { display:flex; align-items:center; gap:8px; }
+.page-btn { width:34px; height:34px; border-radius:6px; border:1px solid #ddd; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; color:#666; transition:all 0.2s; user-select:none; }
+.page-btn:hover { border-color:#3498db; color:#3498db; }
+.page-btn.active { background:#3498db; color:#fff; border-color:#3498db; }
+.page-btn.disabled { opacity:0.5; cursor:not-allowed; }
+.loading { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:flex; align-items:center; justify-content:center; z-index:9999; font-size:18px; color:#3498db; }
+.form-group { display:flex; align-items:center; gap:15px; margin-bottom:20px; }
+.form-group label { width:100px; text-align:right; color:#666; }
+.form-group input { padding:8px 12px; border:1px solid #ddd; border-radius:6px; width:250px; }
+</style>
+</head>
+<body>
+<div class="loading" id="loading">正在生成销售数据（2026年6月实收1,203,386元 · 7月实收1,276,478元 · 其他月份随机±15%），请稍候...</div>
+<div class="top-header">
+  <div class="logo"><div class="logo-icon">XZ</div>销售管理系统</div>
+  <div class="company-name">竹溪县鑫竹电器有限公司</div>
+</div>
+<div class="main-wrapper">
+  <div class="sidebar">
+    <div class="sidebar-item active" data-page="overview">📊 首页概览</div>
+    <div class="sidebar-item" data-page="member">👥 会员管理</div>
+    <div class="sidebar-item" data-page="purchase">🚚 采购管理</div>
+    <div class="sidebar-item" data-page="sale">📦 销售管理</div>
+    <div class="sidebar-item" data-page="stock">📦 库存管理</div>
+    <div class="sidebar-item" data-page="report">📈 经营报表</div>
+    <div class="sidebar-item" data-page="settings">⚙️ 系统设置</div>
+  </div>
+  <div class="content">
+    <div class="page-section active" id="page-overview">
+      <div class="page-title">首页概览</div>
+      <div class="card-grid" id="overviewCards"></div>
+      <div class="table-card"><table><thead><tr><th>日期</th><th>销售额</th><th>订单数</th><th>退货金额</th><th>净利润(估)</th></tr></thead><tbody id="overviewRecentTable"></tbody></table></div>
+    </div>
+    <div class="page-section" id="page-member">
+      <div class="page-title">会员管理</div>
+      <div class="filter-card"><div class="filter-item"><span>会员姓名：</span><input id="memberSearch" placeholder="输入姓名搜索"></div><button class="btn btn-primary" id="memberSearchBtn">查询</button></div>
+      <div class="table-card"><table><thead><tr><th>会员卡号</th><th>姓名</th><th>电话</th><th>累计消费</th><th>积分</th></tr></thead><tbody id="memberTableBody"></tbody></table></div>
+      <div class="page-bar" id="memberPageBar"></div>
+    </div>
+    <div class="page-section" id="page-purchase">
+      <div class="page-title">采购管理</div>
+      <div class="table-card"><table><thead><tr><th>采购单号</th><th>供应商</th><th>商品</th><th>数量</th><th>单价</th><th>金额</th><th>日期</th><th>状态</th></tr></thead><tbody id="purchaseTableBody"></tbody></table></div>
+    </div>
+    <div class="page-section" id="page-sale">
+      <div class="page-title">销售明细查询</div>
+      <div class="filter-card">
+        <div class="filter-item"><span>单据类型：</span><select id="orderType"><option value="all">全部</option><option value="sale">销售单</option><option value="return">销售退货单</option></select></div>
+        <div class="filter-item"><span>开始时间：</span><input type="datetime-local" id="startTime"></div>
+        <div class="filter-item"><span>结束时间：</span><input type="datetime-local" id="endTime"></div>
+        <div class="filter-item"><span>商品名称：</span><input id="goodsKeyword" placeholder="输入商品名/编码"></div>
+        <div class="filter-item"><span>客户信息：</span><input id="customerKeyword" placeholder="输入客户名/单号"></div>
+        <button class="btn btn-primary" id="searchBtn">查询</button>
+        <button class="btn btn-default" id="resetBtn">重置</button>
+        <button class="btn btn-outline" id="exportBtn">📎 导出 Excel</button>
+      </div>
+      <div class="table-card"><table><thead><tr><th>序号</th><th>单据日期</th><th>单据编号</th><th>客户名称</th><th>商品名称</th><th>商品编码</th><th>数量</th><th>单价</th><th>单位</th><th>金额</th><th>经手人</th><th>备注</th></tr></thead><tbody id="tableBody"></tbody></table></div>
+      <div class="page-bar" id="pageBar"></div>
+    </div>
+    <div class="page-section" id="page-stock">
+      <div class="page-title">库存管理</div>
+      <div class="filter-card"><div class="filter-item"><span>商品名称：</span><input id="stockSearch" placeholder="输入商品名/编码"></div><button class="btn btn-primary" id="stockSearchBtn">查询</button></div>
+      <div class="table-card"><table><thead><tr><th>商品编码</th><th>商品名称</th><th>单位</th><th>库存数量</th><th>预警值</th><th>状态</th></tr></thead><tbody id="stockTableBody"></tbody></table></div>
+    </div>
+    <div class="page-section" id="page-report">
+      <div class="page-title">经营报表</div>
+      <div class="card-grid" id="reportSummaryCards"></div>
+      <div class="table-card"><table><thead><tr><th>商品</th><th>销量</th><th>销售额</th><th>退货量</th><th>退货率</th></tr></thead><tbody id="reportTableBody"></tbody></table></div>
+    </div>
+    <div class="page-section" id="page-settings">
+      <div class="page-title">系统设置</div>
+      <div class="filter-card" style="flex-direction:column;align-items:flex-start;gap:15px;">
+        <div class="form-group"><label>公司名称：</label><input value="竹溪县鑫竹电器有限公司" style="width:300px"></div>
+        <div class="form-group"><label>默认利润率：</label><input value="25%" style="width:100px"></div>
+        <div class="form-group"><label>库存预警阈值：</label><input value="10" style="width:100px"></div>
+        <div class="form-group"><label>数据保留年限：</label><input value="5" style="width:100px"></div>
+        <button class="btn btn-primary">保存设置</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ===================== 固定种子随机引擎 =====================
+const FIXED_SEED = 2025060101;
+function mulberry32(seed) { return function() { let t = seed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let rng = mulberry32(FIXED_SEED);
+function resetRNG() { rng = mulberry32(FIXED_SEED); }
+function rand() { return rng(); }
+function randInt(min, max) { return Math.floor(rand() * (max - min + 1)) + min; }
+function randChance(prob) { return rand() < prob; }
+function randItem(arr) { return arr[Math.floor(rand() * arr.length)]; }
+function shuffleArray(arr) { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+const INIT_STOCK_QTY = 80, PAGE_SIZE = 20;
+// 核心参数：退货率8%
+const TARGET_RETURN_RATE = 0.08;
+// 2026年基准净销售额
+const BASE_NET_2026 = 1204368;
+// 6月、7月固定净销售额
+const TARGET_NET_2026_JUN = 1203386;
+const TARGET_NET_2026_JUL = 1276478;
+
+const operatorList = ["娟娟", "张霞", "管理员"];
+const goodsList = [
+  { name:"格力大1匹变频空调", sku:"AC-SPLIT-001", price:2299, unit:"台" },
+  { name:"美的1.5匹一级变频", sku:"AC-SPLIT-002", price:2699, unit:"台" },
+  { name:"海尔3匹立柜式空调", sku:"AC-CAB-001", price:4999, unit:"台" },
+  { name:"奥克斯1.5匹挂机", sku:"AC-SPLIT-003", price:1899, unit:"台" },
+  { name:"TCL 2匹圆柱柜机", sku:"AC-CAB-002", price:3599, unit:"台" },
+  { name:"海尔双门节能冰箱", sku:"RF-FRZR-101", price:1199, unit:"台" },
+  { name:"美的三门无霜冰箱", sku:"RF-FRZR-102", price:1799, unit:"台" },
+  { name:"容声对开门冰箱", sku:"RF-SBS-201", price:2999, unit:"台" },
+  { name:"美菱十字门冰箱", sku:"RF-CRS-301", price:2599, unit:"台" },
+  { name:"海信迷你冷柜", sku:"RF-CHST-401", price:699, unit:"台" },
+  { name:"海尔10kg滚筒洗衣机", sku:"WM-DRUM-201", price:2199, unit:"台" },
+  { name:"小天鹅波轮洗衣机", sku:"WM-IMP-101", price:899, unit:"台" },
+  { name:"美的洗烘一体机", sku:"WM-WD-301", price:3299, unit:"台" },
+  { name:"西门子8kg滚筒", sku:"WM-DRUM-202", price:3899, unit:"台" },
+  { name:"松下9kg波轮", sku:"WM-IMP-102", price:1599, unit:"台" },
+  { name:"小米55英寸智能电视", sku:"TV-LED-501", price:1999, unit:"台" },
+  { name:"海信65英寸4K电视", sku:"TV-UHD-601", price:2899, unit:"台" },
+  { name:"TCL 75英寸量子点", sku:"TV-QLED-701", price:4999, unit:"台" },
+  { name:"创维50英寸全面屏", sku:"TV-LED-502", price:1699, unit:"台" },
+  { name:"海尔50L电热水器", sku:"WH-STR-101", price:1299, unit:"台" },
+  { name:"美的60L电热水器", sku:"WH-STR-102", price:1499, unit:"台" },
+  { name:"万家乐燃气热水器", sku:"WH-GAS-201", price:1099, unit:"台" },
+  { name:"林内16L燃气热水器", sku:"WH-GAS-202", price:2699, unit:"台" },
+  { name:"老板侧吸油烟机", sku:"KE-HOOD-101", price:2899, unit:"台" },
+  { name:"方太燃气灶双灶", sku:"KE-STOVE-201", price:1599, unit:"台" },
+  { name:"美的蒸烤箱一体机", sku:"KE-OVEN-301", price:899, unit:"台" },
+  { name:"格兰仕微波炉", sku:"KE-MW-401", price:459, unit:"台" },
+  { name:"海尔嵌入式洗碗机", sku:"KE-DW-501", price:2499, unit:"台" },
+  { name:"苏泊尔电压力锅", sku:"KE-PC-601", price:329, unit:"台" },
+  { name:"美的电饭煲4L", sku:"KE-RC-701", price:269, unit:"台" },
+  { name:"九阳豆浆机", sku:"KE-SB-801", price:239, unit:"台" },
+  { name:"苏泊尔破壁机", sku:"KE-BL-901", price:399, unit:"台" },
+  { name:"小熊电煮锅1.7L", sku:"KE-EC-100", price:89, unit:"台" },
+  { name:"小米电磁炉套装", sku:"KE-IH-110", price:199, unit:"套" },
+  { name:"美的塔扇无叶风扇", sku:"HA-FAN-101", price:169, unit:"台" },
+  { name:"格力落地扇", sku:"HA-FAN-102", price:129, unit:"台" },
+  { name:"美的加湿器5L", sku:"HA-HUM-201", price:99, unit:"台" },
+  { name:"小米空气净化器", sku:"HA-AP-301", price:799, unit:"台" },
+  { name:"奥克斯暖风机", sku:"HA-HEAT-401", price:139, unit:"台" },
+  { name:"美的除湿机", sku:"HA-DEH-501", price:699, unit:"台" },
+  { name:"美的电热水壶", sku:"HA-KET-601", price:59, unit:"台" },
+  { name:"戴森吸尘器V8", sku:"HA-VAC-701", price:1999, unit:"台" },
+  { name:"科沃斯扫地机器人", sku:"HA-ROB-801", price:1499, unit:"台" },
+  { name:"飞科剃须刀", sku:"PC-SHAV-101", price:89, unit:"台" },
+  { name:"松下电吹风", sku:"PC-HD-201", price:199, unit:"台" },
+  { name:"小米电动牙刷", sku:"PC-BR-301", price:39, unit:"支" },
+  { name:"飞利浦冲牙器", sku:"PC-WF-401", price:299, unit:"台" }
+];
+
+const surnames = ["陈","王","李","张","刘","杨","胡","罗","朱","何","蔡","代","贺","杜","蒋","彭","肖","屈","徐","唐","曾","马","甘","岳","龙","黄","吴","赵","周","郑","冯","孙","宋","潘","郭","沈","韩","谭","程"];
+const doubleNames = ["建华","秀兰","国强","桂英","志远","文博","丽华","晓明","海涛","春梅","国庆","玉芬","德才","美玲","俊杰","爱华","建平","振国","淑珍","金凤","炳坤","桂芳","文明","秀英","志强","秀云","建国","秀荣","玉兰","凤英"];
+const singleNames = ["军","强","伟","芳","丽","敏","静","涛","磊","鹏","飞","玲","勇","刚","峰","斌","华","明","红","超","平","辉","杰","鑫","宇","浩","博","文","龙","洋","波","剑","锋","琴","云","霞","林","江","兵","全"];
+const remarkList = ["免费送货上门","免费安装","整机保修3年","新房装修配套","以旧换新","单位采购","家电下乡","货到付款"];
+const phonePrefixes = ["136","138","139","150","151","152","158","159","182","183","187","188"];
+
+function formatMoney(num) { return '¥' + Math.round(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function formatNumber(num) { if (isNaN(num)) return '0.00'; return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function getYesterdayRangeStrings() { const d = new Date(); d.setDate(d.getDate() - 1); const pad = n => String(n).padStart(2,'0'); const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; return { start: `${dateStr}T00:00`, end: `${dateStr}T23:59` }; }
+function isWeekend(d) { return d.getDay()===0||d.getDay()===6; }
+function getRandomDailyOrderCount(d) { return isWeekend(d) ? randInt(10, 19) : randInt(5, 12); }
+function adjustWorkTime(date) { let h = date.getHours(), m = date.getMinutes(); if (h < 8 || (h === 8 && m < 30)) date.setHours(8, 30, 0, 0); else if (h > 21 || (h === 21 && m > 0)) date.setHours(21, 0, 0, 0); return date; }
+function getRandomGoodsList(count) { return shuffleArray(goodsList).slice(0, count); }
+function getOrderGoodsCount() { const r = rand(); if(r < 0.92) return 1; if(r < 0.99) return 2; return 3; }
+function getGoodsBuyNum() { return randChance(0.96) ? 1 : 2; }
+function getOperator() { return randItem(operatorList); }
+function getRandomRemark() { return randChance(0.4) ? randItem(remarkList) : ""; }
+
+const MEMBER_DATA = [];
+let memberFilteredData = [], currentMemberPage = 1;
+let PAGE_DATA = [], filteredData = [], currentPage = 1;
+let fixedPurchaseData = null;
+
+function generateMemberData() {
+  MEMBER_DATA.length = 0;
+  for (let i = 1; i <= 6354; i++) {
+    const surname = randItem(surnames), givenName = randChance(0.6) ? randItem(doubleNames) : randItem(singleNames);
+    const prefix = randItem(phonePrefixes), suffix = String(randInt(0, 99999999)).padStart(8, '0');
+    const totalAmount = Math.round(rand() * 50000);
+    MEMBER_DATA.push({ cardNo: `VIP${String(i).padStart(6, '0')}`, name: surname + givenName, phone: prefix + suffix, totalAmount, points: Math.floor(totalAmount) });
+  }
+  memberFilteredData = [...MEMBER_DATA];
+}
+
+// 生成某个月的精确数据（保证净销售额 = targetNet）
+function generateMonthData(year, month, targetNet) {
+  const sales = [];
+  const start = new Date(year, month, 1);
+  const end = new Date(year, month + 1, 0);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dailyCount = getRandomDailyOrderCount(d);
+    for (let o = 0; o < dailyCount; o++) {
+      const rawTime = new Date(year, month, d.getDate(), randInt(8, 20), randInt(0, 59), randInt(0, 59));
+      const finalTime = adjustWorkTime(rawTime);
+      const goodsCnt = getOrderGoodsCount();
+      const goodsItems = getRandomGoodsList(goodsCnt);
+      const customer = randItem(MEMBER_DATA).name;
+      const operator = getOperator();
+      const remark = getRandomRemark();
+      for (const g of goodsItems) {
+        const qty = getGoodsBuyNum();
+        sales.push({ timestamp: finalTime.getTime(), customer, goods: { ...g }, qty, price: g.price, money: qty * g.price, operator, remark });
+      }
+    }
+  }
+  sales.sort((a, b) => a.timestamp - b.timestamp);
+  const targetGross = Math.round(targetNet / (1 - TARGET_RETURN_RATE));
+  let currentTotalSales = sales.reduce((sum, r) => sum + r.money, 0);
+  let diff = targetGross - currentTotalSales;
+  if (diff > 0) {
+    while (diff > 0) {
+      const candidates = goodsList.filter(g => g.price <= diff);
+      const g = candidates.length > 0 ? randItem(candidates) : goodsList.reduce((min, cur) => cur.price < min.price ? cur : min);
+      const price = Math.min(g.price, diff);
+      const day = randInt(1, end.getDate());
+      const rawTime = new Date(year, month, day, randInt(8, 20), randInt(0, 59), randInt(0, 59));
+      sales.push({ timestamp: adjustWorkTime(rawTime).getTime(), customer: randItem(MEMBER_DATA).name, goods: { ...g, price }, qty: 1, price, money: price, operator: getOperator(), remark: "补充订单(调总额)" });
+      diff -= price; currentTotalSales += price;
+    }
+  } else if (diff < 0) {
+    let excess = -diff;
+    sales.sort((a, b) => a.money - b.money);
+    const toRemove = [];
+    for (const sale of sales) { if (sale.money <= excess) { toRemove.push(sale); excess -= sale.money; currentTotalSales -= sale.money; if (excess <= 0) break; } }
+    sales = sales.filter(s => !toRemove.includes(s));
+  }
+  sales.sort((a, b) => a.timestamp - b.timestamp);
+  const targetReturn = targetGross - targetNet;
+  let remainingReturn = targetReturn;
+  const sortedByMoney = [...sales].sort((a, b) => b.money - a.money);
+  const returnSet = new Set();
+  for (const sale of sortedByMoney) { if (remainingReturn <= 0) break; if (sale.money <= remainingReturn) { returnSet.add(sale); remainingReturn -= sale.money; } }
+  if (remainingReturn > 0) {
+    const adjRecord = { timestamp: new Date(year, month, end.getDate(), 23, 55, 0).getTime(), customer: "系统调账", goods: { name: "退货差额精确调账", sku: "ADJ-RET", price: remainingReturn, unit: "笔" }, qty: -1, price: remainingReturn, money: -remainingReturn, operator: "管理员", remark: "退货差额精确调账", isAdjust: true };
+    sales.push(adjRecord); returnSet.add(adjRecord); remainingReturn = 0;
+  }
+  const finalRecords = [];
+  for (const sale of sales) {
+    if (sale.isAdjust) { finalRecords.push({ ...sale, isReturn: true, qty: -1, money: -Math.abs(sale.money), remark: sale.remark }); }
+    else if (returnSet.has(sale)) { finalRecords.push({ ...sale, isReturn: false }); finalRecords.push({ ...sale, isReturn: true, qty: -sale.qty, money: -sale.money, remark: (sale.remark || "") + " (售后退货)" }); }
+    else { finalRecords.push({ ...sale, isReturn: false }); }
+  }
+  return finalRecords.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+// 获取指定月份的目标净销售额（0-11）
+function getTargetNetForMonth(month) {
+  if (month === 5) return TARGET_NET_2026_JUN; // 6月
+  if (month === 6) return TARGET_NET_2026_JUL; // 7月
+  const variation = (rand() * 0.3) - 0.15; // -15% ~ +15%
+  return Math.round(BASE_NET_2026 * (1 + variation));
+}
+
+function generate2026TargetData() {
+  const all = [];
+  for (let m = 0; m < 12; m++) {
+    const targetNet = getTargetNetForMonth(m);
+    all.push(...generateMonthData(2026, m, targetNet));
+  }
+  return all;
+}
+
+function buildFullData() {
+  const all = generate2026TargetData().sort((a, b) => a.timestamp - b.timestamp);
+  let serial = 1;
+  return all.map(rec => {
+    const dt = new Date(rec.timestamp);
+    const y = dt.getFullYear(), mo = String(dt.getMonth() + 1).padStart(2, '0'), da = String(dt.getDate()).padStart(2, '0');
+    const code = `${rec.isReturn ? 'TH' : 'XS'}${String(y).slice(2)}${mo}${da}${String(serial++).padStart(5, '0')}`;
+    return { ...rec, code, time: `${y}-${mo}-${da} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}:${String(dt.getSeconds()).padStart(2,'0')}` };
+  });
+}
+
+function initRealData() { resetRNG(); generateMemberData(); PAGE_DATA = buildFullData(); filteredData = [...PAGE_DATA]; }
+
+function generateFixedPurchaseData() {
+  const suppliers = ["武汉电器批发","十堰五交化","襄阳家电城","宜昌电器总汇"];
+  return Array.from({length: 20}, (_, i) => {
+    const g = randItem(goodsList), qty = randInt(5, 25), price = Math.round(g.price * (0.65 + rand() * 0.1));
+    return { id: `CG2025${String(i+1).padStart(3,'0')}`, supplier: randItem(suppliers), name: g.name, qty, price, amount: qty * price, date: `2025-${String(randInt(1,12)).padStart(2,'0')}-${String(randInt(1,28)).padStart(2,'0')}`, status: randChance(0.8) ? "已完成" : "在途" };
+  });
+}
+function computeRealStock() {
+  const netMap = new Map();
+  PAGE_DATA.forEach(item => netMap.set(item.goods.sku, (netMap.get(item.goods.sku) || 0) + item.qty));
+  return goodsList.map(g => ({ sku: g.sku, name: g.name, unit: g.unit, qty: Math.max(0, INIT_STOCK_QTY + (netMap.get(g.sku) || 0)), warn: 10 }));
+}
+
+function renderOverview() {
+  const ts = PAGE_DATA.reduce((s,i)=>s+(i.money>0?i.money:0),0), tr=Math.abs(PAGE_DATA.reduce((s,i)=>s+(i.money<0?i.money:0),0));
+  document.getElementById('overviewCards').innerHTML=`<div class="stat-card"><div class="stat-icon blue">📊</div><div class="stat-info"><h3>${new Set(PAGE_DATA.map(i=>i.code)).size.toLocaleString()}</h3><small>总订单数</small></div></div><div class="stat-card"><div class="stat-icon green">💵</div><div class="stat-info"><h3>${formatMoney(ts-tr)}</h3><small>净销售额</small></div></div><div class="stat-card"><div class="stat-icon orange">🔁</div><div class="stat-info"><h3>${formatMoney(tr)}</h3><small>退货总额</small></div></div><div class="stat-card"><div class="stat-icon red">👥</div><div class="stat-info"><h3>${MEMBER_DATA.length.toLocaleString()}</h3><small>会员总数</small></div></div>`;
+  const seen=new Set(),recent=[];
+  for(let i=PAGE_DATA.length-1;i>=0&&recent.length<10;i--){const date=PAGE_DATA[i].time.substring(0,10);if(!seen.has(date)){seen.add(date);const dd=PAGE_DATA.filter(p=>p.time.startsWith(date));recent.push({date,sale:dd.reduce((s,p)=>s+(p.money>0?p.money:0),0),orders:new Set(dd.map(p=>p.code)).size,ret:Math.abs(dd.reduce((s,p)=>s+(p.money<0?p.money:0),0))});}}
+  recent.reverse();
+  document.getElementById('overviewRecentTable').innerHTML=recent.map(r=>`<tr><td>${r.date}</td><td>${formatMoney(r.sale)}</td><td>${r.orders}</td><td>${formatMoney(r.ret)}</td><td>${formatMoney(r.sale-r.ret)}</td></tr>`).join('')||'<tr class="empty-row"><td colspan="5">暂无数据</td></tr>';
+}
+function renderPurchase(){if(!fixedPurchaseData)fixedPurchaseData=generateFixedPurchaseData();document.getElementById('purchaseTableBody').innerHTML=fixedPurchaseData.map(p=>`<tr><td>${p.id}</td><td>${p.supplier}</td><td>${p.name}</td><td>${p.qty}</td><td>${formatMoney(p.price)}</td><td>${formatMoney(p.amount)}</td><td>${p.date}</td><td>${p.status}</td></tr>`).join('');}
+function renderStock(){const kw=(document.getElementById("stockSearch")?.value||"").trim().toLowerCase(),items=computeRealStock(),f=kw?items.filter(s=>s.name.toLowerCase().includes(kw)||s.sku.toLowerCase().includes(kw)):items;document.getElementById('stockTableBody').innerHTML=f.map(s=>`<tr><td>${s.sku}</td><td>${s.name}</td><td>${s.unit}</td><td>${s.qty}</td><td>${s.warn}</td><td>${s.qty<=s.warn?'<span style="color:red;">⚠ 库存不足</span>':'✅ 正常'}</td></tr>`).join('')||'<tr class="empty-row"><td colspan="6">暂无匹配商品</td></tr>';}
+function renderReport(){const stats={};PAGE_DATA.forEach(item=>{const sku=item.goods.sku;if(!stats[sku])stats[sku]={name:item.goods.name,saleQty:0,saleAmount:0,returnQty:0};if(item.money>0){stats[sku].saleQty+=item.qty;stats[sku].saleAmount+=item.money}else stats[sku].returnQty+=Math.abs(item.qty)});const list=Object.values(stats).sort((a,b)=>b.saleAmount-a.saleAmount);document.getElementById('reportTableBody').innerHTML=list.map(s=>`<tr><td>${s.name}</td><td>${s.saleQty}</td><td>${formatMoney(s.saleAmount)}</td><td>${s.returnQty}</td><td>${s.saleQty+s.returnQty>0?((s.returnQty/(s.saleQty+s.returnQty))*100).toFixed(1):'0.0'}%</td></tr>`).join('');document.getElementById('reportSummaryCards').innerHTML=`<div class="stat-card"><div class="stat-icon blue">🏆</div><div class="stat-info"><h3>${list[0]?.name||'-'}</h3><small>最畅销商品</small></div></div><div class="stat-card"><div class="stat-icon green">📈</div><div class="stat-info"><h3>${list.length}</h3><small>经营品类数</small></div></div><div class="stat-card"><div class="stat-icon orange">📉</div><div class="stat-info"><h3>${formatMoney(list.reduce((s,i)=>s+i.saleAmount,0))}</h3><small>总销售额</small></div></div>`;}
+
+function renderSaleTable(){
+  const tbody=document.getElementById("tableBody");if(!tbody)return;
+  tbody.innerHTML="";const list=filteredData.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
+  if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="12">暂无匹配数据</td></tr>';renderSalePageBar();return;}
+  list.forEach((item,idx)=>{const tr=document.createElement("tr");if(item.isReturn)tr.classList.add("return");tr.innerHTML=`<td>${(currentPage-1)*PAGE_SIZE+idx+1}</td><td>${item.time}</td><td>${item.code}</td><td>${item.customer}</td><td>${item.goods.name}</td><td>${item.goods.sku}</td><td>${item.qty}</td><td>${formatMoney(item.price)}</td><td>${item.goods.unit}</td><td>${formatMoney(item.money)}</td><td>${item.operator}</td><td>${item.remark||'-'}</td>`;tbody.appendChild(tr);});
+  renderSalePageBar();
+}
+function renderSalePageBar(){
+  const bar=document.getElementById("pageBar");if(!bar)return;bar.innerHTML="";
+  const total=filteredData.length,totalPage=Math.ceil(total/PAGE_SIZE)||1;
+  const qty=filteredData.reduce((s,i)=>s+i.qty,0),sale=filteredData.reduce((s,i)=>s+(i.money>0?i.money:0),0),ret=Math.abs(filteredData.reduce((s,i)=>s+(i.money<0?i.money:0),0));
+  const info=document.createElement("div");info.className="page-info";
+  info.innerHTML=`<span>总条数：<span class="num num-blue">${total.toLocaleString()}</span></span><span>总数量：<span class="num num-blue">${qty.toLocaleString()}</span></span><span>总销售额：<span class="num num-red">${formatMoney(sale)}</span></span><span>退货金额：<span class="num num-orange">${formatMoney(ret)}</span></span><span>实收金额：<span class="num num-green">${formatMoney(sale-ret)}</span></span>`;
+  const pag=document.createElement("div");pag.className="page-pagination";
+  const prev=document.createElement("div");prev.className=`page-btn ${currentPage>1?'':'disabled'}`;prev.innerText="<";prev.onclick=()=>{if(currentPage>1){currentPage--;renderSaleTable();}};pag.appendChild(prev);
+  for(let i=Math.max(1,currentPage-2);i<=Math.min(totalPage,currentPage+2);i++){const btn=document.createElement("div");btn.className=`page-btn ${i===currentPage?'active':''}`;btn.innerText=i;btn.onclick=()=>{currentPage=i;renderSaleTable();};pag.appendChild(btn);}
+  const next=document.createElement("div");next.className=`page-btn ${currentPage<totalPage?'':'disabled'}`;next.innerText=">";next.onclick=()=>{if(currentPage<totalPage){currentPage++;renderSaleTable();}};pag.appendChild(next);
+  bar.appendChild(info);bar.appendChild(pag);
+}
+function handleSearch(){
+  const type=document.getElementById("orderType").value,sV=document.getElementById("startTime").value,eV=document.getElementById("endTime").value;
+  const gk=document.getElementById("goodsKeyword").value.trim().toLowerCase(),ck=document.getElementById("customerKeyword").value.trim().toLowerCase();
+  const st=sV?new Date(sV).getTime():0,et=eV?new Date(eV).getTime():Date.now()+86400000;
+  filteredData=PAGE_DATA.filter(item=>{if(type==="sale"&&item.isReturn)return false;if(type==="return"&&!item.isReturn)return false;if(item.timestamp<st||item.timestamp>et)return false;if(gk&&!`${item.goods.name} ${item.goods.sku}`.toLowerCase().includes(gk))return false;if(ck&&!`${item.customer} ${item.code}`.toLowerCase().includes(ck))return false;return true;});
+  currentPage=1;renderSaleTable();
+}
+function handleReset(){document.getElementById("orderType").value="all";const y=getYesterdayRangeStrings();document.getElementById("startTime").value=y.start;document.getElementById("endTime").value=y.end;document.getElementById("goodsKeyword").value="";document.getElementById("customerKeyword").value="";filteredData=[...PAGE_DATA];handleSearch();}
+function exportExcel(){if(!filteredData.length)return alert("暂无数据");const data=filteredData.map((item,i)=>({"序号":i+1,"单据日期":item.time,"单据编号":item.code,"客户名称":item.customer,"商品名称":item.goods.name,"商品编码":item.goods.sku,"数量":item.qty,"单价":item.price,"单位":item.goods.unit,"金额":item.money,"经手人":item.operator,"备注":item.remark||""}));const ws=XLSX.utils.json_to_sheet(data),wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"销售明细");XLSX.writeFile(wb,`销售明细_${new Date().toISOString().slice(0,10)}.xlsx`);}
+function handleMemberSearch(){const kw=document.getElementById("memberSearch").value.trim().toLowerCase();memberFilteredData=kw?MEMBER_DATA.filter(m=>m.name.toLowerCase().includes(kw)):[...MEMBER_DATA];currentMemberPage=1;renderMemberTable();}
+function renderMemberTable(){const tbody=document.getElementById("memberTableBody");if(!tbody)return;tbody.innerHTML="";const list=memberFilteredData.slice((currentMemberPage-1)*PAGE_SIZE,currentMemberPage*PAGE_SIZE);if(!list.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">暂无匹配会员</td></tr>';renderMemberPageBar();return;}list.forEach(m=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${m.cardNo}</td><td>${m.name}</td><td>${m.phone}</td><td>${formatMoney(m.totalAmount)}</td><td>${m.points.toLocaleString()}</td>`;tbody.appendChild(tr);});renderMemberPageBar();}
+function renderMemberPageBar(){const bar=document.getElementById("memberPageBar");if(!bar)return;bar.innerHTML="";const total=memberFilteredData.length,totalPage=Math.ceil(total/PAGE_SIZE)||1;const info=document.createElement("div");info.className="page-info";info.innerHTML=`<span>会员总数：<span class="num num-blue">${total.toLocaleString()}</span></span><span>当前页：<span class="num num-blue">${currentMemberPage}/${totalPage}</span></span>`;const pag=document.createElement("div");pag.className="page-pagination";const prev=document.createElement("div");prev.className=`page-btn ${currentMemberPage>1?'':'disabled'}`;prev.innerText="<";prev.onclick=()=>{if(currentMemberPage>1){currentMemberPage--;renderMemberTable();}};pag.appendChild(prev);for(let i=Math.max(1,currentMemberPage-2);i<=Math.min(totalPage,currentMemberPage+2);i++){const btn=document.createElement("div");btn.className=`page-btn ${i===currentMemberPage?'active':''}`;btn.innerText=i;btn.onclick=()=>{currentMemberPage=i;renderMemberTable();};pag.appendChild(btn);}const next=document.createElement("div");next.className=`page-btn ${currentMemberPage<totalPage?'':'disabled'}`;next.innerText=">";next.onclick=()=>{if(currentMemberPage<totalPage){currentMemberPage++;renderMemberTable();}};pag.appendChild(next);bar.appendChild(info);bar.appendChild(pag);}
+function switchPage(page){document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));document.getElementById(`page-${page}`)?.classList.add('active');document.querySelector(`.sidebar-item[data-page="${page}"]`)?.classList.add('active');if(page==='stock')renderStock();if(page==='purchase')renderPurchase();if(page==='report')renderReport();if(page==='member')renderMemberTable();if(page==='sale')renderSaleTable();if(page==='overview')renderOverview();}
+function renderAllPages(){renderOverview();renderMemberTable();renderPurchase();renderStock();renderReport();handleSearch();}
+
+document.addEventListener('DOMContentLoaded',function(){
+  initRealData();
+  document.getElementById('loading').style.display='none';
+  const y=getYesterdayRangeStrings();
+  const si=document.getElementById("startTime"),ei=document.getElementById("endTime");
+  if(si)si.value=y.start;if(ei)ei.value=y.end;
+  document.getElementById("searchBtn")?.addEventListener('click',handleSearch);
+  document.getElementById("resetBtn")?.addEventListener('click',handleReset);
+  document.getElementById("exportBtn")?.addEventListener('click',exportExcel);
+  document.getElementById("memberSearchBtn")?.addEventListener('click',handleMemberSearch);
+  document.getElementById("stockSearchBtn")?.addEventListener('click',renderStock);
+  document.querySelectorAll('.sidebar-item').forEach(item=>item.addEventListener('click',()=>switchPage(item.dataset.page)));
+  document.getElementById("memberSearch")?.addEventListener('keyup',e=>{if(e.key==='Enter')handleMemberSearch();});
+  document.getElementById("stockSearch")?.addEventListener('keyup',e=>{if(e.key==='Enter')renderStock();});
+  renderAllPages();
+});
+</script>
+</body>
+</html>
